@@ -1,4 +1,4 @@
-function HTMLActuator() {
+export default function HTMLActuator() {
   this.tileContainer    = document.querySelector(".tile-container");
   this.scoreContainer   = document.querySelector(".score-container");
   this.bestContainer    = document.querySelector(".best-container");
@@ -7,14 +7,14 @@ function HTMLActuator() {
   this.score = 0;
 }
 
-HTMLActuator.prototype.actuate = function (grid, metadata) {
+HTMLActuator.prototype.actuate = function (grid: any, metadata: any) {
   var self = this;
 
   window.requestAnimationFrame(function () {
     self.clearContainer(self.tileContainer);
 
-    grid.cells.forEach(function (column) {
-      column.forEach(function (cell) {
+    grid.cells.forEach(function (column: any) {
+      column.forEach(function (cell: any) {
         if (cell) {
           self.addTile(cell);
         }
@@ -40,13 +40,13 @@ HTMLActuator.prototype.continueGame = function () {
   this.clearMessage();
 };
 
-HTMLActuator.prototype.clearContainer = function (container) {
+HTMLActuator.prototype.clearContainer = function (container: any) {
   while (container.firstChild) {
     container.removeChild(container.firstChild);
   }
 };
 
-HTMLActuator.prototype.addTile = function (tile) {
+HTMLActuator.prototype.addTile = function (tile: any) {
   var self = this;
 
   var wrapper   = document.createElement("div");
@@ -75,7 +75,7 @@ HTMLActuator.prototype.addTile = function (tile) {
     this.applyClasses(wrapper, classes);
 
     // Render the tiles that merged
-    tile.mergedFrom.forEach(function (merged) {
+    tile.mergedFrom.forEach(function (merged: any) {
       self.addTile(merged);
     });
   } else {
@@ -90,20 +90,20 @@ HTMLActuator.prototype.addTile = function (tile) {
   this.tileContainer.appendChild(wrapper);
 };
 
-HTMLActuator.prototype.applyClasses = function (element, classes) {
+HTMLActuator.prototype.applyClasses = function (element: any, classes: any) {
   element.setAttribute("class", classes.join(" "));
 };
 
-HTMLActuator.prototype.normalizePosition = function (position) {
+HTMLActuator.prototype.normalizePosition = function (position: any) {
   return { x: position.x + 1, y: position.y + 1 };
 };
 
-HTMLActuator.prototype.positionClass = function (position) {
+HTMLActuator.prototype.positionClass = function (position: any) {
   position = this.normalizePosition(position);
   return "tile-position-" + position.x + "-" + position.y;
 };
 
-HTMLActuator.prototype.updateScore = function (score) {
+HTMLActuator.prototype.updateScore = function (score: any) {
   this.clearContainer(this.scoreContainer);
 
   var difference = score - this.score;
@@ -120,11 +120,11 @@ HTMLActuator.prototype.updateScore = function (score) {
   }
 };
 
-HTMLActuator.prototype.updateBestScore = function (bestScore) {
+HTMLActuator.prototype.updateBestScore = function (bestScore: any) {
   this.bestContainer.textContent = bestScore;
 };
 
-HTMLActuator.prototype.message = function (won) {
+HTMLActuator.prototype.message = function (won: any) {
   var type    = won ? "game-won" : "game-over";
   var message = won ? "You win!" : "Game over!";
 

@@ -1,31 +1,24 @@
-function KeyboardInputManager() {
+export default function KeyboardInputManager() {
   this.events = {};
 
-  if (window.navigator.msPointerEnabled) {
-    //Internet Explorer 10 style
-    this.eventTouchstart    = "MSPointerDown";
-    this.eventTouchmove     = "MSPointerMove";
-    this.eventTouchend      = "MSPointerUp";
-  } else {
-    this.eventTouchstart    = "touchstart";
-    this.eventTouchmove     = "touchmove";
-    this.eventTouchend      = "touchend";
-  }
+  this.eventTouchstart    = "touchstart";
+  this.eventTouchmove     = "touchmove";
+  this.eventTouchend      = "touchend";
 
   this.listen();
 }
 
-KeyboardInputManager.prototype.on = function (event, callback) {
+KeyboardInputManager.prototype.on = function (event: any, callback: any) {
   if (!this.events[event]) {
     this.events[event] = [];
   }
   this.events[event].push(callback);
 };
 
-KeyboardInputManager.prototype.emit = function (event, data) {
+KeyboardInputManager.prototype.emit = function (event: any, data: any) {
   var callbacks = this.events[event];
   if (callbacks) {
-    callbacks.forEach(function (callback) {
+    callbacks.forEach(function (callback: any) {
       callback(data);
     });
   }
@@ -34,7 +27,7 @@ KeyboardInputManager.prototype.emit = function (event, data) {
 KeyboardInputManager.prototype.listen = function () {
   var self = this;
 
-  var map = {
+  var map: {[key: number]: number} = {
     38: 0, // Up
     39: 1, // Right
     40: 2, // Down
@@ -74,45 +67,33 @@ KeyboardInputManager.prototype.listen = function () {
   this.bindButtonPress(".keep-playing-button", this.keepPlaying);
 
   // Respond to swipe events
-  var touchStartClientX, touchStartClientY;
+  var touchStartClientX: any, touchStartClientY: any;
   var gameContainer = document.getElementsByClassName("game-container")[0];
 
-  gameContainer.addEventListener(this.eventTouchstart, function (event) {
-    if ((!window.navigator.msPointerEnabled && event.touches.length > 1) ||
-        event.targetTouches.length > 1) {
+  gameContainer.addEventListener(this.eventTouchstart, function (event: any) {
+    if (event.touches.length > 1) {
       return; // Ignore if touching with more than 1 finger
     }
 
-    if (window.navigator.msPointerEnabled) {
-      touchStartClientX = event.pageX;
-      touchStartClientY = event.pageY;
-    } else {
-      touchStartClientX = event.touches[0].clientX;
-      touchStartClientY = event.touches[0].clientY;
-    }
+    touchStartClientX = event.touches[0].clientX;
+    touchStartClientY = event.touches[0].clientY;
 
     event.preventDefault();
   });
 
-  gameContainer.addEventListener(this.eventTouchmove, function (event) {
+  gameContainer.addEventListener(this.eventTouchmove, function (event: any) {
     event.preventDefault();
   });
 
-  gameContainer.addEventListener(this.eventTouchend, function (event) {
-    if ((!window.navigator.msPointerEnabled && event.touches.length > 0) ||
-        event.targetTouches.length > 0) {
+  gameContainer.addEventListener(this.eventTouchend, function (event: any) {
+    if (event.touches.length > 0) {
       return; // Ignore if still touching with one or more fingers
     }
 
     var touchEndClientX, touchEndClientY;
 
-    if (window.navigator.msPointerEnabled) {
-      touchEndClientX = event.pageX;
-      touchEndClientY = event.pageY;
-    } else {
-      touchEndClientX = event.changedTouches[0].clientX;
-      touchEndClientY = event.changedTouches[0].clientY;
-    }
+    touchEndClientX = event.changedTouches[0].clientX;
+    touchEndClientY = event.changedTouches[0].clientY;
 
     var dx = touchEndClientX - touchStartClientX;
     var absDx = Math.abs(dx);
@@ -127,17 +108,17 @@ KeyboardInputManager.prototype.listen = function () {
   });
 };
 
-KeyboardInputManager.prototype.restart = function (event) {
+KeyboardInputManager.prototype.restart = function (event: any) {
   event.preventDefault();
   this.emit("restart");
 };
 
-KeyboardInputManager.prototype.keepPlaying = function (event) {
+KeyboardInputManager.prototype.keepPlaying = function (event: any) {
   event.preventDefault();
   this.emit("keepPlaying");
 };
 
-KeyboardInputManager.prototype.bindButtonPress = function (selector, fn) {
+KeyboardInputManager.prototype.bindButtonPress = function (selector: any, fn: any) {
   var button = document.querySelector(selector);
   button.addEventListener("click", fn.bind(this));
   button.addEventListener(this.eventTouchend, fn.bind(this));
