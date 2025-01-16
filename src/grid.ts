@@ -1,16 +1,16 @@
 import Tile from "./tile";
 
 export default class Grid {
-  size: any;
-  cells: any;
+  private size: number;
+  public cells: Tile[][];
 
-  constructor(size: any, previousState?: any) {
+  public constructor(size: number, previousState?: any) {
     this.size = size;
     this.cells = previousState ? this.fromState(previousState) : this.empty();
   }
 
   // Build a grid of the specified size
-  public empty(): any[][] {
+  private empty(): any[][] {
     var cells = [];
 
     for (var x = 0; x < this.size; x++) {
@@ -24,7 +24,7 @@ export default class Grid {
     return cells;
   }
 
-  public fromState(state: any): any[][] {
+  private fromState(state: any): any[][] {
     var cells = [];
 
     for (var x = 0; x < this.size; x++) {
@@ -48,7 +48,7 @@ export default class Grid {
     }
   }
 
-  public availableCells(): any[] {
+  private availableCells(): any[] {
     var cells: any[] = [];
 
     this.eachCell(function (x: any, y: any, tile: any) {
@@ -70,16 +70,16 @@ export default class Grid {
   }
 
   // Check if there are any cells available
-  public cellsAvailable() {
+  public cellsAvailable(): boolean {
     return !!this.availableCells().length;
   }
 
   // Check if the specified cell is taken
-  public cellAvailable(cell: any) {
+  public cellAvailable(cell: any): boolean {
     return !this.cellOccupied(cell);
   }
 
-  public cellOccupied(cell: any) {
+  private cellOccupied(cell: any) {
     return !!this.cellContent(cell);
   }
 
@@ -92,7 +92,7 @@ export default class Grid {
   }
 
   // Inserts a tile at its position
-  public insertTile(tile: any) {
+  public insertTile(tile: Tile) {
     this.cells[tile.x][tile.y] = tile;
   }
 

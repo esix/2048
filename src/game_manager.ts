@@ -1,59 +1,61 @@
 import Grid from "./grid";
 import Tile from "./tile";
+import HTMLActuator from "./actuator";
+import KeyboardInputManager from "./keyboard_input_manager";
+import LocalStorageManager from "./local_storage_manager";
 
 export default class GameManager {
-  public size: any; // Size of the grid
-  public inputManager: any;
-  public storageManager: any;
-  public actuator: any;
-  public startTiles: number;
-  public _keepPlaying: boolean;
-  public over: any;
-  public grid: any;
-  public score: any;
-  public won: any;
+  private size: any; // Size of the grid
+  private inputManager: KeyboardInputManager;
+  private storageManager: LocalStorageManager;
+  private actuator: HTMLActuator;
+  private startTiles: number;
+  private _keepPlaying: boolean;
+  private over: any;
+  private grid: Grid;
+  private score: number;
+  private won: any;
 
-  public constructor(size: any, InputManager: any, Actuator: any, StorageManager: any) {
+  public constructor(size: number) {
     this.size = size; // Size of the grid
-    this.inputManager = new InputManager;
-    this.storageManager = new StorageManager;
-    this.actuator = new Actuator;
+    this.inputManager = new KeyboardInputManager();
+    this.storageManager = new LocalStorageManager();
+    this.actuator = new HTMLActuator();
 
     this.startTiles = 2;
 
-    this.inputManager.on("move", this.move.bind(this));
-    this.inputManager.on("restart", this.restart.bind(this));
-    this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+    this.inputManager.on("move", this.move);
+    this.inputManager.on("restart", this.restart);
+    this.inputManager.on("keepPlaying", this.keepPlaying);
 
     this.setup();
   }
 
   // Restart the game
-  public restart = () => {
+  private restart = () => {
     this.storageManager.clearGameState();
     this.actuator.continueGame(); // Clear the game won/lost message
     this.setup();
   }
 
   // Keep playing after winning (allows going over 2048)
-  public keepPlaying = () => {
+  private keepPlaying = () => {
     this._keepPlaying = true;
     this.actuator.continueGame(); // Clear the game won/lost message
   }
 
   // Return true if the game is lost, or has won and the user hasn't kept playing
-  public isGameTerminated() {
+  private isGameTerminated() {
     return this.over || (this.won && !this._keepPlaying);
   }
 
   // Set up the game
-  public setup() {
+  private setup() {
     var previousState = this.storageManager.getGameState();
 
     // Reload the game from a previous game if present
     if (previousState) {
-      this.grid = new Grid(previousState.grid.size,
-        previousState.grid.cells); // Reload grid
+      this.grid = new Grid(previousState.grid.size, previousState.grid.cells); // Reload grid
       this.score = previousState.score;
       this.over = previousState.over;
       this.won = previousState.won;
@@ -74,24 +76,24 @@ export default class GameManager {
   }
 
   // Set up the initial tiles to start the game with
-  public addStartTiles() {
+  private addStartTiles() {
     for (var i = 0; i < this.startTiles; i++) {
       this.addRandomTile();
     }
   }
 
   // Adds a tile in a random position
-  public addRandomTile() {
+  private addRandomTile(): void {
     if (this.grid.cellsAvailable()) {
       var value = Math.random() < 0.9 ? 2 : 4;
-      var tile = new Tile(this.grid.randomAvailableCell(), value);
+      var tile: Tile = new Tile(this.grid.randomAvailableCell(), value);
 
       this.grid.insertTile(tile);
     }
   }
 
   // Sends the updated grid to the actuator
-  public actuate() {
+  private actuate() {
     if (this.storageManager.getBestScore() < this.score) {
       this.storageManager.setBestScore(this.score);
     }
@@ -114,7 +116,7 @@ export default class GameManager {
   }
 
   // Represent the current game as an object
-  public serialize() {
+  private serialize() {
     return {
       grid: this.grid.serialize(),
       score: this.score,
@@ -125,7 +127,7 @@ export default class GameManager {
   }
 
   // Save all tile positions and remove merger info
-  public prepareTiles() {
+  private prepareTiles() {
     this.grid.eachCell(function (x: any, y: any, tile: Tile) {
       if (tile) {
         tile.mergedFrom = null;
@@ -135,14 +137,14 @@ export default class GameManager {
   }
 
   // Move a tile and its representation
-  public moveTile(tile: Tile, cell: any) {
+  private moveTile(tile: Tile, cell: any) {
     this.grid.cells[tile.x][tile.y] = null;
     this.grid.cells[cell.x][cell.y] = tile;
     tile.updatePosition(cell);
   };
 
   // Move tiles on the grid in the specified direction
-  public move(direction: any) {
+  private move = (direction: any) => {
     // 0: up, 1: right, 2: down, 3: left
     var self = this;
 
@@ -206,7 +208,7 @@ export default class GameManager {
   }
 
   // Get the vector representing the chosen direction
-  public getVector(direction: any): { x: number, y: number } {
+  private getVector(direction: any): { x: number, y: number } {
     // Vectors representing tile movement
     var map: { [key: number]: { x: number, y: number } } = {
       0: {x: 0, y: -1}, // Up
@@ -219,7 +221,7 @@ export default class GameManager {
   }
 
   // Build a list of positions to traverse in the right order
-  public buildTraversals(vector: any) {
+  private buildTraversals(vector: any) {
     var traversals: { x: any[], y: any[] } = {x: [], y: []};
 
     for (var pos = 0; pos < this.size; pos++) {
@@ -234,7 +236,7 @@ export default class GameManager {
     return traversals;
   }
 
-  public findFarthestPosition(cell: any, vector: any) {
+  private findFarthestPosition(cell: any, vector: any) {
     var previous;
 
     // Progress towards the vector direction until an obstacle is found
@@ -250,12 +252,12 @@ export default class GameManager {
     };
   }
 
-  public movesAvailable() {
+  private movesAvailable() {
     return this.grid.cellsAvailable() || this.tileMatchesAvailable();
   }
 
   // Check for available matches between tiles (more expensive check)
-  public tileMatchesAvailable() {
+  private tileMatchesAvailable() {
     var self = this;
 
     var tile;
@@ -282,7 +284,7 @@ export default class GameManager {
     return false;
   }
 
-  public positionsEqual(first: any, second: any) {
+  private positionsEqual(first: any, second: any) {
     return first.x === second.x && first.y === second.y;
   }
 }

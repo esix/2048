@@ -2,7 +2,7 @@ export default class Tile {
   public x: number;
   public y: number;
   public value: number;
-  public previousPosition: any;
+  private previousPosition: any;
   public mergedFrom: any;
 
   public constructor(position: any, value: any) {
