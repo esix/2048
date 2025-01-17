@@ -1,44 +1,54 @@
+import { IPosition } from "./local_storage_manager";
+import Grid from "./grid";
+import Tile from "./tile";
+
+interface IActuateMetadata {
+  score: number;
+  over: boolean;
+  won: boolean;
+  bestScore: number;
+  terminated: boolean;
+}
+
+
 export default class HTMLActuator {
-  private tileContainer: Element;
+  private tileContainer: HTMLDivElement;
   private scoreContainer: HTMLDivElement;
-  private bestContainer: Element;
-  private messageContainer: Element;
+  private bestContainer: HTMLDivElement;
+  private messageContainer: HTMLDivElement;
   private score: number;
 
   public constructor() {
-    this.tileContainer = document.querySelector(".tile-container");
-    this.scoreContainer = document.querySelector(".score-container");
-    this.bestContainer = document.querySelector(".best-container");
-    this.messageContainer = document.querySelector(".game-message");
+    this.tileContainer = document.querySelector(".tile-container")!;
+    this.scoreContainer = document.querySelector(".score-container")!;
+    this.bestContainer = document.querySelector(".best-container")!;
+    this.messageContainer = document.querySelector(".game-message")!;
 
     this.score = 0;
   }
 
-  public actuate(grid: any, metadata: any): any {
-    var self = this;
+  public actuate(grid: Grid, metadata: IActuateMetadata): void {
+    window.requestAnimationFrame(() => {
+      this.clearContainer(this.tileContainer);
 
-    window.requestAnimationFrame(function () {
-      self.clearContainer(self.tileContainer);
-
-      grid.cells.forEach(function (column: any) {
-        column.forEach(function (cell: any) {
+      grid.cells.forEach((column: (Tile | null)[]) => {
+        column.forEach((cell: Tile | null) => {
           if (cell) {
-            self.addTile(cell);
+            this.addTile(cell);
           }
         });
       });
 
-      self.updateScore(metadata.score);
-      self.updateBestScore(metadata.bestScore);
+      this.updateScore(metadata.score);
+      this.updateBestScore(metadata.bestScore);
 
       if (metadata.terminated) {
         if (metadata.over) {
-          self.message(false); // You lose
+          this.message(false); // You lose
         } else if (metadata.won) {
-          self.message(true); // You win!
+          this.message(true); // You win!
         }
       }
-
     });
   }
 
@@ -47,43 +57,41 @@ export default class HTMLActuator {
     this.clearMessage();
   };
 
-  private clearContainer(container: any) {
+  private clearContainer(container: HTMLDivElement) {
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
   }
 
-  private addTile(tile: any) {
-    var self = this;
-
-    var wrapper = document.createElement("div");
-    var inner = document.createElement("div");
-    var position = tile.previousPosition || {x: tile.x, y: tile.y};
-    var positionClass = this.positionClass(position);
+  private addTile(tile: Tile) {
+    const wrapper: HTMLDivElement = document.createElement("div");
+    const inner: HTMLDivElement = document.createElement("div");
+    const position: IPosition = tile.previousPosition || {x: tile.x, y: tile.y};
+    const positionClass = this.positionClass(position);
 
     // We can't use classlist because it somehow glitches when replacing classes
-    var classes = ["tile", "tile-" + tile.value, positionClass];
+    const classes = ["tile", "tile-" + tile.value, positionClass];
 
     if (tile.value > 2048) classes.push("tile-super");
 
     this.applyClasses(wrapper, classes);
 
     inner.classList.add("tile-inner");
-    inner.textContent = tile.value;
+    inner.textContent = String(tile.value);
 
     if (tile.previousPosition) {
       // Make sure that the tile gets rendered in the previous position first
-      window.requestAnimationFrame(function () {
-        classes[2] = self.positionClass({x: tile.x, y: tile.y});
-        self.applyClasses(wrapper, classes); // Update the position
+      window.requestAnimationFrame(() => {
+        classes[2] = this.positionClass({x: tile.x, y: tile.y});
+        this.applyClasses(wrapper, classes); // Update the position
       });
     } else if (tile.mergedFrom) {
       classes.push("tile-merged");
       this.applyClasses(wrapper, classes);
 
       // Render the tiles that merged
-      tile.mergedFrom.forEach(function (merged: any) {
-        self.addTile(merged);
+      tile.mergedFrom.forEach((merged: Tile) => {
+        this.addTile(merged);
       });
     } else {
       classes.push("tile-new");
@@ -101,25 +109,25 @@ export default class HTMLActuator {
     element.setAttribute("class", classes.join(" "));
   }
 
-  private normalizePosition(position: any) {
+  private normalizePosition(position: IPosition): IPosition {
     return {x: position.x + 1, y: position.y + 1};
   }
 
-  private positionClass(position: any) {
+  private positionClass(position: IPosition) {
     position = this.normalizePosition(position);
     return "tile-position-" + position.x + "-" + position.y;
   }
 
-  private updateScore(score: any) {
+  private updateScore(score: number) {
     this.clearContainer(this.scoreContainer);
 
-    var difference = score - this.score;
+    const difference = score - this.score;
     this.score = score;
 
     this.scoreContainer.textContent = String(this.score);
 
     if (difference > 0) {
-      var addition = document.createElement("div");
+      const addition: HTMLDivElement = document.createElement("div");
       addition.classList.add("score-addition");
       addition.textContent = "+" + difference;
 
@@ -127,13 +135,13 @@ export default class HTMLActuator {
     }
   }
 
-  private updateBestScore(bestScore: any) {
-    this.bestContainer.textContent = bestScore;
+  private updateBestScore(bestScore: number): void {
+    this.bestContainer.textContent = String(bestScore);
   };
 
-  private message(won: any) {
-    var type = won ? "game-won" : "game-over";
-    var message = won ? "You win!" : "Game over!";
+  private message(won: boolean): void {
+    const type = won ? "game-won" : "game-over";
+    const message = won ? "You win!" : "Game over!";
 
     this.messageContainer.classList.add(type);
     this.messageContainer.getElementsByTagName("p")[0].textContent = message;

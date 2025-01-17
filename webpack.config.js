@@ -2,6 +2,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const webConfig =  {
   target: 'web',
+  entry: {
+    index: './src/application.ts',
+  },
   module: {
     rules: [
       {

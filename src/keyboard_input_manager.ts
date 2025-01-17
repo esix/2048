@@ -1,5 +1,19 @@
+
+
+export const UP = 0;
+export const RIGHT = 1;
+export const DOWN = 2;
+export const LEFT = 3;
+export type IDirection = 0 | 1 | 2 | 3;
+
+type IEvent = 'move' | 'restart' | 'keepPlaying';
+
 export default class KeyboardInputManager {
-  private events: any;
+  private events: {
+    move?: ((direction: IDirection) => void)[],
+    restart?: (() => void)[],
+    keepPlaying?: (() => void)[],
+  };
   private eventTouchstart: string;
   private eventTouchmove: string;
   private eventTouchend: string;
@@ -14,26 +28,30 @@ export default class KeyboardInputManager {
     this.listen();
   }
 
-  public on(event: any, callback: any) {
+  public on(event: 'move', callback: (direction: IDirection) => void): void;
+  public on(event: 'restart', callback: () => void): void;
+  public on(event: 'keepPlaying', callback: () => void): void;
+  public on(event: IEvent, callback: unknown): void {
     if (!this.events[event]) {
       this.events[event] = [];
     }
-    this.events[event].push(callback);
+    this.events[event].push(callback as () => void);
   }
 
-  private emit(event: any, data: any) {
-    var callbacks = this.events[event];
+  private emit(event: 'move', data: number): void;
+  private emit(event: 'restart', data: unknown): void;
+  private emit(event: 'keepPlaying', data: unknown): void;
+  private emit(event: IEvent, data: number): void {
+    const callbacks = this.events[event];
     if (callbacks) {
-      callbacks.forEach(function (callback: any) {
+      callbacks.forEach((callback: any): void => {
         callback(data);
       });
     }
   }
 
-  private listen() {
-    var self = this;
-
-    var map: { [key: number]: number } = {
+  private listen(): void {
+    const map: { [key: number]: number } = {
       38: 0, // Up
       39: 1, // Right
       40: 2, // Down
@@ -49,21 +67,20 @@ export default class KeyboardInputManager {
     };
 
     // Respond to direction keys
-    document.addEventListener("keydown", function (event) {
-      var modifiers = event.altKey || event.ctrlKey || event.metaKey ||
-        event.shiftKey;
-      var mapped = map[event.which];
+    document.addEventListener("keydown", (event): void => {
+      const modifiers = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+      const mapped = map[event.which];
 
       if (!modifiers) {
         if (mapped !== undefined) {
           event.preventDefault();
-          self.emit("move", mapped);
+          this.emit("move", mapped);
         }
       }
 
       // R key restarts the game
       if (!modifiers && event.which === 82) {
-        self.restart.call(self, event);
+        this.restart(event);
       }
     });
 
@@ -73,10 +90,10 @@ export default class KeyboardInputManager {
     this.bindButtonPress(".keep-playing-button", this.keepPlaying);
 
     // Respond to swipe events
-    var touchStartClientX: any, touchStartClientY: any;
-    var gameContainer = document.getElementsByClassName("game-container")[0];
+    let touchStartClientX: number, touchStartClientY: number;
+    const gameContainer = document.getElementsByClassName("game-container")[0];
 
-    gameContainer.addEventListener(this.eventTouchstart, function (event: any) {
+    gameContainer.addEventListener(this.eventTouchstart, (event: any): void => {
       if (event.touches.length > 1) {
         return; // Ignore if touching with more than 1 finger
       }
@@ -87,45 +104,43 @@ export default class KeyboardInputManager {
       event.preventDefault();
     });
 
-    gameContainer.addEventListener(this.eventTouchmove, function (event: any) {
+    gameContainer.addEventListener(this.eventTouchmove, (event: any): void=> {
       event.preventDefault();
     });
 
-    gameContainer.addEventListener(this.eventTouchend, function (event: any) {
+    gameContainer.addEventListener(this.eventTouchend, (event: any): void=> {
       if (event.touches.length > 0) {
         return; // Ignore if still touching with one or more fingers
       }
 
-      var touchEndClientX, touchEndClientY;
+      const touchEndClientX: number = event.changedTouches[0].clientX;
+      const touchEndClientY: number = event.changedTouches[0].clientY;
 
-      touchEndClientX = event.changedTouches[0].clientX;
-      touchEndClientY = event.changedTouches[0].clientY;
+      const dx = touchEndClientX - touchStartClientX;
+      const absDx = Math.abs(dx);
 
-      var dx = touchEndClientX - touchStartClientX;
-      var absDx = Math.abs(dx);
-
-      var dy = touchEndClientY - touchStartClientY;
-      var absDy = Math.abs(dy);
+      const dy = touchEndClientY - touchStartClientY;
+      const absDy = Math.abs(dy);
 
       if (Math.max(absDx, absDy) > 10) {
         // (right : left) : (down : up)
-        self.emit("move", absDx > absDy ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+        this.emit("move", absDx > absDy ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
       }
     });
   }
 
-  private restart(event: any) {
+  private restart(event: KeyboardEvent): void {
     event.preventDefault();
     this.emit("restart", null);
   }
 
-  private keepPlaying(event: any) {
+  private keepPlaying(event: any): void {
     event.preventDefault();
     this.emit("keepPlaying", null);
   }
 
-  private bindButtonPress(selector: any, fn: any) {
-    var button = document.querySelector(selector);
+  private bindButtonPress(selector: string, fn: any): void {
+    const button = document.querySelector(selector)!;
     button.addEventListener("click", fn.bind(this));
     button.addEventListener(this.eventTouchend, fn.bind(this));
   }

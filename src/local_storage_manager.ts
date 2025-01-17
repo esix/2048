@@ -1,3 +1,30 @@
+export interface IPosition {
+  x: number;
+  y: number;
+}
+
+export interface ITileState {
+  position: IPosition;
+  value: number;
+}
+
+export type IRow = (ITileState | null)[];
+export type ICells = IRow[];
+
+export interface IGridState {
+  size: number;
+  cells: ICells;
+}
+
+export interface IGameState {
+  grid: IGridState;
+  score: number;
+  over: boolean;
+  won: boolean;
+  keepPlaying: boolean;
+}
+
+
 export default class LocalStorageManager {
   private bestScoreKey: string;
   private gameStateKey: string;
@@ -11,7 +38,7 @@ export default class LocalStorageManager {
 
   // Best score getters/setters
   public getBestScore() {
-    return +this.storage.getItem(this.bestScoreKey) || 0;
+    return +this.storage.getItem(this.bestScoreKey)! || 0;
   }
 
   public setBestScore(score: number): void {
@@ -19,12 +46,12 @@ export default class LocalStorageManager {
   }
 
   // Game state getters/setters and clearing
-  public getGameState() {
-    var stateJSON = this.storage.getItem(this.gameStateKey);
+  public getGameState(): IGameState | null {
+    const stateJSON = this.storage.getItem(this.gameStateKey);
     return stateJSON ? JSON.parse(stateJSON) : null;
   }
 
-  public setGameState(gameState: any): void {
+  public setGameState(gameState: IGameState): void {
     this.storage.setItem(this.gameStateKey, JSON.stringify(gameState));
   }
 

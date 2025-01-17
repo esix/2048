@@ -1,5 +1,7 @@
 import GameManager from "./game_manager";
 
-export default function main() {
+function main() {
   new GameManager(4);
 }
+
+main();
